@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NECレッドロケッツ川崎 ポイント電卓</title>
+  <style>
+    :root {
+      --primary: #e60012;
+      --bg: #f5f5f7;
+      --card-bg: #ffffff;
+      --text: #333333;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 12px;
+      padding-bottom: 80px;
+    }
+    h1 {
+      font-size: 1.2rem;
+      text-align: center;
+      margin-bottom: 12px;
+      color: var(--primary);
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .card-title {
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 4px;
+    }
+    .flex-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .goods-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .goods-name {
+      font-size: 0.9rem;
+      font-weight: 500;
+      flex: 1;
+    }
+    .goods-price {
+      font-size: 0.85rem;
+      color: #666;
+      margin-right: 12px;
+    }
+    .counter {
+      display: flex;
+      align-items: center;
+    }
+    .btn-counter {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid #ccc;
+      background: #fff;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .btn-counter:active {
+      background: #eee;
+    }
+    .count-val {
+      width: 36px;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+    .input-num {
+      width: 80px;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      text-align: right;
+    }
+    .summary-box {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    .summary-item {
+      text-align: center;
+    }
+    .summary-label {
+      font-size: 0.75rem;
+      color: #666;
+    }
+    .summary-val {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .sub-info {
+      font-size: 0.8rem;
+      color: #555;
+      margin-top: 4px;
+    }
+    .target-result {
+      margin-top: 8px;
+      padding: 8px;
+      background: #fff0f0;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #c00;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🚀 グッズ・ポイント電卓</h1>
+
+  <!-- 現在の状況 & 目標 -->
+  <div class="card">
+    <div class="card-title">🎯 ポイントシミュレーション</div>
+    <div class="flex-row">
+      <span class="summary-label">現在の所持ポイント</span>
+      <input type="number" id="currentPt" class="input-num" value="0" oninput="calculate()">
+    </div>
+    <div class="flex-row">
+      <span class="summary-label">目標ポイント</span>
+      <input type="number" id="targetPt" class="input-num" value="2000" oninput="calculate()">
+    </div>
+    <div class="flex-row">
+      <span class="summary-label">会場搭乗回数 (100pt/回)</span>
+      <input type="number" id="checkinCount" class="input-num" value="1" oninput="calculate()">
+    </div>
+    <div class="flex-row">
+      <span class="summary-label">飲食利用額 (5pt/500円)</span>
+      <input type="number" id="foodCost" class="input-num" value="0" step="500" oninput="calculate()">
+    </div>
+    <div id="targetResult" class="target-result">
+      目標まで：あと 0 pt（グッズで約 0 円必要）
+    </div>
+  </div>
+
+  <!-- グッズリスト -->
+  <div class="card">
+    <div class="card-title">🛍️ グッズ一覧（＋/ーで個数選択）</div>
+    <div id="goodsList"></div>
+  </div>
+
+  <!-- フッター固定合計 -->
+  <div class="summary-box">
+    <div class="summary-item">
+      <div class="summary-label">グッズ合計</div>
+      <div class="summary-val" id="totalPrice">¥0</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">今回獲得ポイント</div>
+      <div class="summary-val" id="totalEarnedPt">0 pt</div>
+    </div>
+  </div>
+
+  <script>
+    // CSVに登録されていたグッズ初期データ
+    const defaultGoods = [
+      { name: "タオル", price: 2800 },
+      { name: "ミニタオル", price: 800 },
+      { name: "プレイヤーズポーチ", price: 1700 },
+      { name: "アクリルステッカー", price: 1000 },
+      { name: "ランダムアクスタ", price: 1000 },
+      { name: "ランダムトレカ", price: 400 },
+      { name: "ランダムヘアクリップ", price: 700 },
+      { name: "ガチャ", price: 600 }
+    ];
+
+    let goodsData = defaultGoods.map(g => ({ ...g, count: 0 }));
+
+    function renderGoods() {
+      const container = document.getElementById("goodsList");
+      container.innerHTML = "";
+      goodsData.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "goods-item";
+        div.innerHTML = `
+          <div>
+            <div class="goods-name">${item.name}</div>
+            <div class="goods-price">¥${item.price.toLocaleString()}</div>
+          </div>
+          <div class="counter">
+            <button class="btn-counter" onclick="updateCount(${index}, -1)">-</button>
+            <span class="count-val">${item.count}</span>
+            <button class="btn-counter" onclick="updateCount(${index}, 1)">+</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function updateCount(index, delta) {
+      goodsData[index].count = Math.max(0, goodsData[index].count + delta);
+      renderGoods();
+      calculate();
+    }
+
+    function calculate() {
+      // グッズ合計計算
+      let goodsTotal = 0;
+      goodsData.forEach(item => {
+        goodsTotal += item.price * item.count;
+      });
+
+      // 各ポイント計算 (プラチナ会員基準)
+      // グッズ: 1,000円ごとに10pt
+      const goodsPt = Math.floor(goodsTotal / 1000) * 10;
+
+      // 搭乗: 1回につき100pt
+      const checkinCount = parseInt(document.getElementById("checkinCount").value) || 0;
+      const checkinPt = checkinCount * 100;
+
+      // 飲食: 500円ごとに5pt
+      const foodCost = parseInt(document.getElementById("foodCost").value) || 0;
+      const foodPt = Math.floor(foodCost / 500) * 5;
+
+      const totalEarned = goodsPt + checkinPt + foodPt;
+
+      // 画面更新
+      document.getElementById("totalPrice").innerText = "¥" + goodsTotal.toLocaleString();
+      document.getElementById("totalEarnedPt").innerText = totalEarned + " pt";
+
+      // 目標との差分計算
+      const currentPt = parseInt(document.getElementById("currentPt").value) || 0;
+      const targetPt = parseInt(document.getElementById("targetPt").value) || 0;
+      
+      const neededPt = targetPt - (currentPt + totalEarned);
+
+      const targetBox = document.getElementById("targetResult");
+      if (neededPt <= 0) {
+        targetBox.style.background = "#e6ffe6";
+        targetBox.style.color = "#008000";
+        targetBox.innerText = "🎉 目標ポイント達成！";
+      } else {
+        targetBox.style.background = "#fff0f0";
+        targetBox.style.color = "#c00";
+        // 10ptにつき1,000円必要
+        const neededYen = Math.ceil(neededPt / 10) * 1000;
+        targetBox.innerText = `目標まで：あと ${neededPt} pt（グッズあと約 ¥${neededYen.toLocaleString()} 購入必要）`;
+      }
+    }
+
+    // 初期化
+    renderGoods();
+    calculate();
+  </script>
+</body>
+</html>
