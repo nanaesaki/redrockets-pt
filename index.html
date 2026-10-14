@@ -17,7 +17,7 @@
       color: var(--text);
       margin: 0;
       padding: 12px;
-      padding-bottom: 80px;
+      padding-bottom: 90px;
     }
     h1 {
       font-size: 1.2rem;
@@ -32,12 +32,26 @@
       margin-bottom: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+    }
     .card-title {
       font-weight: bold;
       font-size: 0.95rem;
-      margin-bottom: 8px;
-      border-bottom: 2px solid var(--primary);
-      padding-bottom: 4px;
+    }
+    .btn-text {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 2px 6px;
     }
     .flex-row {
       display: flex;
@@ -52,15 +66,16 @@
       padding: 8px 0;
       border-bottom: 1px solid #eee;
     }
+    .goods-info {
+      flex: 1;
+    }
     .goods-name {
       font-size: 0.9rem;
       font-weight: 500;
-      flex: 1;
     }
     .goods-price {
       font-size: 0.85rem;
       color: #666;
-      margin-right: 12px;
     }
     .counter {
       display: flex;
@@ -97,6 +112,108 @@
       font-size: 0.95rem;
       text-align: right;
     }
+    .target-result {
+      margin-top: 8px;
+      padding: 8px;
+      background: #fff0f0;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #c00;
+      font-weight: bold;
+    }
+    /* 管理モーダル・エリア */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #fff;
+      width: 90%;
+      max-width: 400px;
+      max-height: 85vh;
+      border-radius: 12px;
+      padding: 16px;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      font-weight: bold;
+      font-size: 1rem;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    .edit-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      background: #f9f9f9;
+      padding: 6px;
+      border-radius: 6px;
+    }
+    .edit-item input[type="text"] {
+      flex: 1;
+      padding: 4px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    .edit-item input[type="number"] {
+      width: 70px;
+      padding: 4px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    .btn-danger {
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .add-form {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed #ccc;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      width: 100%;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-secondary {
+      background: #666;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-top: 6px;
+      width: 100%;
+    }
     .summary-box {
       position: fixed;
       bottom: 0;
@@ -122,20 +239,6 @@
       font-weight: bold;
       color: var(--primary);
     }
-    .sub-info {
-      font-size: 0.8rem;
-      color: #555;
-      margin-top: 4px;
-    }
-    .target-result {
-      margin-top: 8px;
-      padding: 8px;
-      background: #fff0f0;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      color: #c00;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
@@ -144,7 +247,9 @@
 
   <!-- 現在の状況 & 目標 -->
   <div class="card">
-    <div class="card-title">🎯 ポイントシミュレーション</div>
+    <div class="card-header">
+      <span class="card-title">🎯 ポイントシミュレーション</span>
+    </div>
     <div class="flex-row">
       <span class="summary-label">現在の所持ポイント</span>
       <input type="number" id="currentPt" class="input-num" value="0" oninput="calculate()">
@@ -168,8 +273,33 @@
 
   <!-- グッズリスト -->
   <div class="card">
-    <div class="card-title">🛍️ グッズ一覧（＋/ーで個数選択）</div>
+    <div class="card-header">
+      <span class="card-title">🛍️ グッズ一覧</span>
+      <button class="btn-text" onclick="openModal()">⚙️ グッズ編集</button>
+    </div>
     <div id="goodsList"></div>
+  </div>
+
+  <!-- グッズ編集モーダル -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span>グッズの編集・追加</span>
+        <button class="btn-close" onclick="closeModal()">×</button>
+      </div>
+      <div id="editGoodsList"></div>
+      
+      <div class="add-form">
+        <div style="font-weight: bold; font-size: 0.85rem; margin-bottom: 6px;">➕ 新規グッズ追加</div>
+        <div class="edit-item">
+          <input type="text" id="newGoodsName" placeholder="グッズ名">
+          <input type="number" id="newGoodsPrice" placeholder="金額(円)">
+        </div>
+        <button class="btn-primary" onclick="addGoods()">追加する</button>
+      </div>
+
+      <button class="btn-secondary" onclick="resetToDefault()">初期グッズに戻す</button>
+    </div>
   </div>
 
   <!-- フッター固定合計 -->
@@ -185,7 +315,6 @@
   </div>
 
   <script>
-    // CSVに登録されていたグッズ初期データ
     const defaultGoods = [
       { name: "タオル", price: 2800 },
       { name: "ミニタオル", price: 800 },
@@ -197,7 +326,25 @@
       { name: "ガチャ", price: 600 }
     ];
 
-    let goodsData = defaultGoods.map(g => ({ ...g, count: 0 }));
+    let goodsData = [];
+
+    // LocalStorageから読み込み、なければデフォルトを使用
+    function loadGoods() {
+      const saved = localStorage.getItem("redrockets_goods_data");
+      if (saved) {
+        try {
+          goodsData = JSON.parse(saved);
+        } catch (e) {
+          goodsData = defaultGoods.map(g => ({ ...g, count: 0 }));
+        }
+      } else {
+        goodsData = defaultGoods.map(g => ({ ...g, count: 0 }));
+      }
+    }
+
+    function saveGoods() {
+      localStorage.setItem("redrockets_goods_data", JSON.stringify(goodsData));
+    }
 
     function renderGoods() {
       const container = document.getElementById("goodsList");
@@ -206,7 +353,7 @@
         const div = document.createElement("div");
         div.className = "goods-item";
         div.innerHTML = `
-          <div>
+          <div class="goods-info">
             <div class="goods-name">${item.name}</div>
             <div class="goods-price">¥${item.price.toLocaleString()}</div>
           </div>
@@ -222,39 +369,30 @@
 
     function updateCount(index, delta) {
       goodsData[index].count = Math.max(0, goodsData[index].count + delta);
+      saveGoods();
       renderGoods();
       calculate();
     }
 
     function calculate() {
-      // グッズ合計計算
       let goodsTotal = 0;
       goodsData.forEach(item => {
-        goodsTotal += item.price * item.count;
+        goodsTotal += item.price * (item.count || 0);
       });
 
-      // 各ポイント計算 (プラチナ会員基準)
-      // グッズ: 1,000円ごとに10pt
       const goodsPt = Math.floor(goodsTotal / 1000) * 10;
-
-      // 搭乗: 1回につき100pt
       const checkinCount = parseInt(document.getElementById("checkinCount").value) || 0;
       const checkinPt = checkinCount * 100;
-
-      // 飲食: 500円ごとに5pt
       const foodCost = parseInt(document.getElementById("foodCost").value) || 0;
       const foodPt = Math.floor(foodCost / 500) * 5;
 
       const totalEarned = goodsPt + checkinPt + foodPt;
 
-      // 画面更新
       document.getElementById("totalPrice").innerText = "¥" + goodsTotal.toLocaleString();
       document.getElementById("totalEarnedPt").innerText = totalEarned + " pt";
 
-      // 目標との差分計算
       const currentPt = parseInt(document.getElementById("currentPt").value) || 0;
       const targetPt = parseInt(document.getElementById("targetPt").value) || 0;
-      
       const neededPt = targetPt - (currentPt + totalEarned);
 
       const targetBox = document.getElementById("targetResult");
@@ -265,13 +403,82 @@
       } else {
         targetBox.style.background = "#fff0f0";
         targetBox.style.color = "#c00";
-        // 10ptにつき1,000円必要
         const neededYen = Math.ceil(neededPt / 10) * 1000;
         targetBox.innerText = `目標まで：あと ${neededPt} pt（グッズあと約 ¥${neededYen.toLocaleString()} 購入必要）`;
       }
     }
 
-    // 初期化
+    // モーダル操作
+    function openModal() {
+      renderEditList();
+      document.getElementById("editModal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("editModal").style.display = "none";
+      renderGoods();
+      calculate();
+    }
+
+    function renderEditList() {
+      const container = document.getElementById("editGoodsList");
+      container.innerHTML = "";
+      goodsData.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "edit-item";
+        div.innerHTML = `
+          <input type="text" value="${item.name}" onchange="editItemName(${index}, this.value)">
+          <input type="number" value="${item.price}" onchange="editItemPrice(${index}, this.value)">
+          <button class="btn-danger" onclick="deleteItem(${index})">削除</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function editItemName(index, val) {
+      goodsData[index].name = val;
+      saveGoods();
+    }
+
+    function editItemPrice(index, val) {
+      goodsData[index].price = parseInt(val) || 0;
+      saveGoods();
+    }
+
+    function deleteItem(index) {
+      goodsData.splice(index, 1);
+      saveGoods();
+      renderEditList();
+    }
+
+    function addGoods() {
+      const nameInput = document.getElementById("newGoodsName");
+      const priceInput = document.getElementById("newGoodsPrice");
+      const name = nameInput.value.trim();
+      const price = parseInt(priceInput.value);
+
+      if (!name || isNaN(price)) {
+        alert("グッズ名と正しい金額を入力してください。");
+        return;
+      }
+
+      goodsData.push({ name: name, price: price, count: 0 });
+      saveGoods();
+      nameInput.value = "";
+      priceInput.value = "";
+      renderEditList();
+    }
+
+    function resetToDefault() {
+      if (confirm("グッズ一覧を初期状態に戻しますか？（現在の個数や追加したアイテムはリセットされます）")) {
+        goodsData = defaultGoods.map(g => ({ ...g, count: 0 }));
+        saveGoods();
+        renderEditList();
+      }
+    }
+
+    // 初期化実行
+    loadGoods();
     renderGoods();
     calculate();
   </script>
